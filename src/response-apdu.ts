@@ -78,13 +78,6 @@ export class ResponseApdu {
     }
 
     /**
-     * Get the raw response data as hex string
-     */
-    get data(): string {
-        return this._data;
-    }
-
-    /**
      * Get SW1 (first status byte) as 2-character hex string
      */
     private getSW1(): string {
