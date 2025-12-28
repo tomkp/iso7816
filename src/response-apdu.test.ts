@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createResponseApdu } from '../src/index.js';
+import { createResponseApdu } from './index.js';
 
 describe('ResponseApdu', () => {
     describe('constructor', () => {

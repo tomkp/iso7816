@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
-import createIso7816 from '../src/iso7816-application.js';
-import type { Card } from '../src/iso7816-application.js';
+import createIso7816 from './iso7816-application.js';
+import type { Card } from './iso7816-application.js';
 
 describe('Iso7816', () => {
     describe('issueCommand()', () => {

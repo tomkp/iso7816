@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { createCommandApdu } from '../src/index.js';
+import { createCommandApdu } from './index.js';
 
 describe('CommandApdu', () => {
     describe('toString()', () => {
