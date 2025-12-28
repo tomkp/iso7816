@@ -14,8 +14,6 @@ export interface CommandApduOptions {
     data?: number[];
     /** Expected response length */
     le?: number;
-    /** Total size (optional, auto-calculated) */
-    size?: number;
 }
 
 /**
@@ -26,36 +24,14 @@ export class CommandApdu {
 
     constructor(options: CommandApduOptions) {
         const { cla, ins, p1, p2, data, le = 0 } = options;
-        let { size } = options;
 
-        // case 1: No data, no Le
-        if (!size && !data && !le) {
-            size = 4;
-        }
-        // case 2: No data, with Le
-        else if (!size && !data) {
-            size = 4 + 2;
-        }
-        // case 3: With data, no Le
-        else if (!size && !le) {
-            size = data!.length + 5 + 4;
-        }
-        // case 4: With data and Le
-        else if (!size) {
-            size = data!.length + 5 + 4;
-        }
-
-        this._bytes = [];
-        this._bytes.push(cla);
-        this._bytes.push(ins);
-        this._bytes.push(p1);
-        this._bytes.push(p2);
+        this._bytes = [cla, ins, p1, p2];
 
         if (data) {
-            const lc = data.length;
-            this._bytes.push(lc);
+            this._bytes.push(data.length);
             this._bytes = this._bytes.concat(data);
         }
+
         this._bytes.push(le);
     }
 
