@@ -17,7 +17,7 @@ describe('ResponseApdu', () => {
 
     describe('getStatusCode()', () => {
         it('should return last 4 hex characters as status code', () => {
-            const response = createResponseApdu(Buffer.from([0x6A, 0x82]));
+            const response = createResponseApdu(Buffer.from([0x6a, 0x82]));
 
             assert.strictEqual(response.getStatusCode(), '6a82');
         });
@@ -37,7 +37,7 @@ describe('ResponseApdu', () => {
         });
 
         it('should return false for error status', () => {
-            const response = createResponseApdu(Buffer.from([0x6A, 0x82]));
+            const response = createResponseApdu(Buffer.from([0x6a, 0x82]));
 
             assert.strictEqual(response.isOk(), false);
         });
@@ -67,7 +67,7 @@ describe('ResponseApdu', () => {
 
     describe('isWrongLength()', () => {
         it('should return true for 6cxx status', () => {
-            const response = createResponseApdu(Buffer.from([0x6C, 0x20]));
+            const response = createResponseApdu(Buffer.from([0x6c, 0x20]));
 
             assert.strictEqual(response.isWrongLength(), true);
         });
@@ -81,7 +81,7 @@ describe('ResponseApdu', () => {
 
     describe('correctLength()', () => {
         it('should return correct length from 6cxx status', () => {
-            const response = createResponseApdu(Buffer.from([0x6C, 0x20]));
+            const response = createResponseApdu(Buffer.from([0x6c, 0x20]));
 
             assert.strictEqual(response.correctLength(), 32);
         });

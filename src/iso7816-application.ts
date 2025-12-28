@@ -5,24 +5,24 @@ import createResponseApdu, { ResponseApdu } from './response-apdu.js';
  * ISO 7816 instruction codes
  */
 export const Instructions = {
-    APPEND_RECORD: 0xE2,
-    ENVELOPE: 0xC2,
-    ERASE_BINARY: 0x0E,
+    APPEND_RECORD: 0xe2,
+    ENVELOPE: 0xc2,
+    ERASE_BINARY: 0x0e,
     EXTERNAL_AUTHENTICATE: 0x82,
     GET_CHALLENGE: 0x84,
-    GET_DATA: 0xCA,
-    GET_RESPONSE: 0xC0,
+    GET_DATA: 0xca,
+    GET_RESPONSE: 0xc0,
     INTERNAL_AUTHENTICATE: 0x88,
     MANAGE_CHANNEL: 0x70,
-    PUT_DATA: 0xDA,
-    READ_BINARY: 0xB0,
-    READ_RECORD: 0xB2,
-    SELECT_FILE: 0xA4,
-    UPDATE_BINARY: 0xD6,
-    UPDATE_RECORD: 0xDC,
+    PUT_DATA: 0xda,
+    READ_BINARY: 0xb0,
+    READ_RECORD: 0xb2,
+    SELECT_FILE: 0xa4,
+    UPDATE_BINARY: 0xd6,
+    UPDATE_RECORD: 0xdc,
     VERIFY: 0x20,
-    WRITE_BINARY: 0xD0,
-    WRITE_RECORD: 0xD2
+    WRITE_BINARY: 0xd0,
+    WRITE_RECORD: 0xd2,
 } as const;
 
 /**
@@ -79,13 +79,15 @@ export class Iso7816 {
      * @returns Promise resolving to the response
      */
     selectFile(bytes: number[], p1: number = 0x04, p2: number = 0x00): Promise<ResponseApdu> {
-        return this.issueCommand(createCommandApdu({
-            cla: 0x00,
-            ins: Instructions.SELECT_FILE,
-            p1,
-            p2,
-            data: bytes
-        }));
+        return this.issueCommand(
+            createCommandApdu({
+                cla: 0x00,
+                ins: Instructions.SELECT_FILE,
+                p1,
+                p2,
+                data: bytes,
+            })
+        );
     }
 
     /**
@@ -94,13 +96,15 @@ export class Iso7816 {
      * @returns Promise resolving to the response
      */
     getResponse(length: number): Promise<ResponseApdu> {
-        return this.issueCommand(createCommandApdu({
-            cla: 0x00,
-            ins: Instructions.GET_RESPONSE,
-            p1: 0x00,
-            p2: 0x00,
-            le: length
-        }));
+        return this.issueCommand(
+            createCommandApdu({
+                cla: 0x00,
+                ins: Instructions.GET_RESPONSE,
+                p1: 0x00,
+                p2: 0x00,
+                le: length,
+            })
+        );
     }
 
     /**
@@ -110,13 +114,15 @@ export class Iso7816 {
      * @returns Promise resolving to the response
      */
     readRecord(sfi: number, record: number): Promise<ResponseApdu> {
-        return this.issueCommand(createCommandApdu({
-            cla: 0x00,
-            ins: Instructions.READ_RECORD,
-            p1: record,
-            p2: (sfi << 3) + 4,
-            le: 0
-        }));
+        return this.issueCommand(
+            createCommandApdu({
+                cla: 0x00,
+                ins: Instructions.READ_RECORD,
+                p1: record,
+                p2: (sfi << 3) + 4,
+                le: 0,
+            })
+        );
     }
 
     /**
@@ -126,13 +132,15 @@ export class Iso7816 {
      * @returns Promise resolving to the response
      */
     getData(p1: number, p2: number): Promise<ResponseApdu> {
-        return this.issueCommand(createCommandApdu({
-            cla: 0x00,
-            ins: Instructions.GET_DATA,
-            p1,
-            p2,
-            le: 0
-        }));
+        return this.issueCommand(
+            createCommandApdu({
+                cla: 0x00,
+                ins: Instructions.GET_DATA,
+                p1,
+                p2,
+                le: 0,
+            })
+        );
     }
 }
 

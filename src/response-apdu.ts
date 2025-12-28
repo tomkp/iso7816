@@ -32,7 +32,7 @@ const statusCodes: Record<string, string> = {
     '^6c(.{2})$': 'Checking error: wrong length (sw2 indicates correct length for le)',
     '^6d(.{2})$': 'Checking error: wrong ins',
     '^6e(.{2})$': 'Checking error: class not supported',
-    '^6f(.{2})$': 'Checking error: no precise diagnosis'
+    '^6f(.{2})$': 'Checking error: no precise diagnosis',
 };
 
 /**
@@ -83,7 +83,7 @@ export class ResponseApdu {
 
         return {
             code: statusCode,
-            meaning: meaning
+            meaning: meaning,
         };
     }
 
