@@ -100,4 +100,100 @@ describe('CommandApdu', () => {
             );
         });
     });
+
+    describe('bytes getter', () => {
+        it('should return a copy to prevent external mutation', () => {
+            const apdu = createCommandApdu({
+                cla: 0x00,
+                ins: 0xa4,
+                p1: 0x04,
+                p2: 0x00,
+            });
+
+            const bytes1 = apdu.bytes;
+            bytes1[0] = 0xff;
+
+            const bytes2 = apdu.bytes;
+            assert.strictEqual(bytes2[0], 0x00, 'Original bytes should be unchanged');
+        });
+    });
+
+    describe('APDU case handling', () => {
+        it('should build APDU with Le only (no data) - Case 2', () => {
+            const apdu = createCommandApdu({
+                cla: 0x00,
+                ins: 0xc0,
+                p1: 0x00,
+                p2: 0x00,
+                le: 0x10,
+            });
+
+            const bytes = apdu.toByteArray();
+
+            // Case 2: CLA INS P1 P2 Le
+            assert.strictEqual(bytes.length, 5);
+            assert.strictEqual(bytes[0], 0x00);
+            assert.strictEqual(bytes[1], 0xc0);
+            assert.strictEqual(bytes[2], 0x00);
+            assert.strictEqual(bytes[3], 0x00);
+            assert.strictEqual(bytes[4], 0x10);
+        });
+
+        it('should build APDU with data and Le - Case 4', () => {
+            const apdu = createCommandApdu({
+                cla: 0x00,
+                ins: 0xa4,
+                p1: 0x04,
+                p2: 0x00,
+                data: [0xa0, 0x00, 0x00],
+                le: 0x10,
+            });
+
+            const bytes = apdu.toByteArray();
+
+            // Case 4: CLA INS P1 P2 Lc Data Le
+            assert.strictEqual(bytes.length, 9);
+            assert.strictEqual(bytes[0], 0x00); // CLA
+            assert.strictEqual(bytes[1], 0xa4); // INS
+            assert.strictEqual(bytes[2], 0x04); // P1
+            assert.strictEqual(bytes[3], 0x00); // P2
+            assert.strictEqual(bytes[4], 0x03); // Lc (data length)
+            assert.strictEqual(bytes[5], 0xa0); // Data byte 1
+            assert.strictEqual(bytes[6], 0x00); // Data byte 2
+            assert.strictEqual(bytes[7], 0x00); // Data byte 3
+            assert.strictEqual(bytes[8], 0x10); // Le
+        });
+
+        it('should handle larger data arrays', () => {
+            const data = Array.from({ length: 100 }, (_, i) => i % 256);
+            const apdu = createCommandApdu({
+                cla: 0x00,
+                ins: 0xd6,
+                p1: 0x00,
+                p2: 0x00,
+                data,
+            });
+
+            const bytes = apdu.toByteArray();
+
+            // CLA INS P1 P2 Lc Data Le
+            assert.strictEqual(bytes.length, 4 + 1 + 100 + 1);
+            assert.strictEqual(bytes[4], 100); // Lc should be 100
+        });
+
+        it('should include data correctly in output', () => {
+            const apdu = createCommandApdu({
+                cla: 0x00,
+                ins: 0xa4,
+                p1: 0x04,
+                p2: 0x00,
+                data: [0x31, 0x50, 0x41, 0x59],
+            });
+
+            const hex = apdu.toString();
+
+            // Should contain: 00 a4 04 00 04 31 50 41 59 00
+            assert.strictEqual(hex, '00a404000431504159' + '00');
+        });
+    });
 });
