@@ -62,7 +62,7 @@ function CommandApdu(obj) {
 
 
 CommandApdu.prototype.toString = function() {
-    return hexify.toHexString(bytes);
+    return hexify.toHexString(this.bytes);
 };
 
 CommandApdu.prototype.toByteArray = function() {
