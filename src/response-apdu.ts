@@ -1,39 +1,56 @@
 /**
- * ISO 7816 status code mappings
+ * ISO 7816 status code mappings (ordered from most specific to least specific)
  */
-const statusCodes: Record<string, string> = {
-    '^9000$': 'Normal processing',
-    '^61(.{2})$': 'Normal processing, (sw2 indicates the number of response bytes still available)',
-    '^62(.{2})$': 'Warning processing',
-    '^6200$': 'no info',
-    '^6281$': 'Part of return data may be corrupted',
-    '^6282$': 'end of file/record reached before reading le bytes',
-    '^6283$': 'ret data may contain structural info',
-    '^6284$': 'selected file is invalidated',
-    '^6285$': 'file control info not in required format',
-    '^6286$': 'unsuccessful writing',
-    '^63(.{2})$': 'Warning processing',
-    '^6300$': 'no info',
-    '^6381$': 'last write filled up file',
-    '^6382$': 'execution successful after retry',
-    '^64(.{2})$': 'Execution error',
-    '^65(.{2})$': 'Execution error',
-    '^6500$': 'no info',
-    '^6581$': 'memory failure',
-    '^66(.{2})$': 'Reserved for future use',
-    '^6700$': 'Wrong length',
-    '^68(.{2})$': 'Checking error: functions in CLA not supported (see sw2)',
-    '^6800$': 'no info',
-    '^6881$': 'logical channel not supported',
-    '^6882$': 'secure messaging not supported',
-    '^69(.{2})$': 'Checking error: command not allowed (see sw2)',
-    '^6a(.{2})$': 'Checking error: wrong parameters (p1 or p2)  (see sw2)',
-    '^6b(.{2})$': 'Checking error: wrong parameters',
-    '^6c(.{2})$': 'Checking error: wrong length (sw2 indicates correct length for le)',
-    '^6d(.{2})$': 'Checking error: wrong ins',
-    '^6e(.{2})$': 'Checking error: class not supported',
-    '^6f(.{2})$': 'Checking error: no precise diagnosis',
-};
+const statusCodes: Array<[RegExp, string]> = [
+    // Specific status codes first
+    [/^9000$/, 'Normal processing'],
+    [/^6200$/, 'No information given'],
+    [/^6281$/, 'Part of return data may be corrupted'],
+    [/^6282$/, 'End of file/record reached before reading Le bytes'],
+    [/^6283$/, 'Selected file invalidated'],
+    [/^6284$/, 'FCI not formatted correctly'],
+    [/^6285$/, 'File control info not in required format'],
+    [/^6286$/, 'Unsuccessful writing'],
+    [/^6300$/, 'Authentication failed'],
+    [/^6381$/, 'Last write filled up file'],
+    [/^6382$/, 'Execution successful after retry'],
+    [/^6500$/, 'No information given'],
+    [/^6581$/, 'Memory failure'],
+    [/^6700$/, 'Wrong length'],
+    [/^6800$/, 'No information given'],
+    [/^6881$/, 'Logical channel not supported'],
+    [/^6882$/, 'Secure messaging not supported'],
+    [/^6981$/, 'Command incompatible with file structure'],
+    [/^6982$/, 'Security status not satisfied'],
+    [/^6983$/, 'Authentication method blocked'],
+    [/^6984$/, 'Referenced data invalidated'],
+    [/^6985$/, 'Conditions of use not satisfied'],
+    [/^6986$/, 'Command not allowed (no current EF)'],
+    [/^6a80$/, 'Incorrect parameters in command data field'],
+    [/^6a81$/, 'Function not supported'],
+    [/^6a82$/, 'File not found'],
+    [/^6a83$/, 'Record not found'],
+    [/^6a84$/, 'Not enough memory space'],
+    [/^6a85$/, 'Lc inconsistent with TLV structure'],
+    [/^6a86$/, 'Incorrect parameters P1-P2'],
+    [/^6a87$/, 'Lc inconsistent with P1-P2'],
+    [/^6a88$/, 'Referenced data not found'],
+    // Generic status codes (wildcards) last
+    [/^61(.{2})$/, 'More data available'],
+    [/^62(.{2})$/, 'Warning processing'],
+    [/^63(.{2})$/, 'Warning processing'],
+    [/^64(.{2})$/, 'Execution error'],
+    [/^65(.{2})$/, 'Execution error'],
+    [/^66(.{2})$/, 'Reserved for future use'],
+    [/^68(.{2})$/, 'Functions in CLA not supported'],
+    [/^69(.{2})$/, 'Command not allowed'],
+    [/^6a(.{2})$/, 'Wrong parameters P1-P2'],
+    [/^6b(.{2})$/, 'Wrong parameters'],
+    [/^6c(.{2})$/, 'Wrong length Le'],
+    [/^6d(.{2})$/, 'Instruction not supported'],
+    [/^6e(.{2})$/, 'Class not supported'],
+    [/^6f(.{2})$/, 'No precise diagnosis'],
+];
 
 /**
  * Status information from a response
@@ -53,6 +70,9 @@ export class ResponseApdu {
     private readonly _data: string;
 
     constructor(buffer: Buffer) {
+        if (buffer.length < 2) {
+            throw new Error('Response APDU must contain at least 2 bytes (SW1 and SW2)');
+        }
         this._buffer = buffer;
         this._data = buffer.toString('hex');
     }
@@ -65,26 +85,32 @@ export class ResponseApdu {
     }
 
     /**
+     * Get SW1 (first status byte) as 2-character hex string
+     */
+    private getSW1(): string {
+        return this._data.slice(-4, -2);
+    }
+
+    /**
+     * Get SW2 (second status byte) as 2-character hex string
+     */
+    private getSW2(): string {
+        return this._data.slice(-2);
+    }
+
+    /**
      * Get status code and meaning
      */
     getStatus(): Status {
         const statusCode = this.getStatusCode();
-        let meaning = 'Unknown';
 
-        for (const prop in statusCodes) {
-            if (Object.prototype.hasOwnProperty.call(statusCodes, prop)) {
-                const result = statusCodes[prop];
-                if (statusCode.match(prop)) {
-                    meaning = result;
-                    break;
-                }
+        for (const [pattern, meaning] of statusCodes) {
+            if (pattern.test(statusCode)) {
+                return { code: statusCode, meaning };
             }
         }
 
-        return {
-            code: statusCode,
-            meaning: meaning,
-        };
+        return { code: statusCode, meaning: 'Unknown' };
     }
 
     /**
@@ -112,30 +138,28 @@ export class ResponseApdu {
      * Check if more bytes are available (61xx status)
      */
     hasMoreBytesAvailable(): boolean {
-        return this._data.slice(-4, -2) === '61';
+        return this.getSW1() === '61';
     }
 
     /**
      * Get number of additional bytes available (from 61xx status)
      */
     numberOfBytesAvailable(): number {
-        const hexLength = this._data.slice(-2);
-        return parseInt(hexLength, 16);
+        return parseInt(this.getSW2(), 16);
     }
 
     /**
      * Check if wrong length was specified (6cxx status)
      */
     isWrongLength(): boolean {
-        return this._data.slice(-4, -2) === '6c';
+        return this.getSW1() === '6c';
     }
 
     /**
      * Get the correct length from 6cxx response
      */
     correctLength(): number {
-        const hexLength = this._data.slice(-2);
-        return parseInt(hexLength, 16);
+        return parseInt(this.getSW2(), 16);
     }
 
     /**
