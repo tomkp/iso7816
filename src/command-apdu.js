@@ -70,7 +70,7 @@ CommandApdu.prototype.toByteArray = function() {
 };
 
 CommandApdu.prototype.toBuffer = function() {
-    return new Buffer(this.bytes);
+    return Buffer.from(this.bytes);
 };
 
 CommandApdu.prototype.setLe = function (le) {
