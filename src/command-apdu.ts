@@ -1,5 +1,3 @@
-import hexify from 'hexify';
-
 /**
  * Options for creating a CommandApdu
  */
@@ -72,7 +70,7 @@ export class CommandApdu {
      * Convert to hex string representation
      */
     toString(): string {
-        return hexify.toHexString(this._bytes);
+        return Buffer.from(this._bytes).toString('hex');
     }
 
     /**
