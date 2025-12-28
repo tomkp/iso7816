@@ -3,21 +3,25 @@
   "version": "1.0.20",
   "description": "ISO 7816 smartcard communication library",
   "type": "module",
-  "main": "src/iso7816-application.js",
-  "types": "src/index.d.ts",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.d.ts",
-      "default": "./src/iso7816-application.js"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
   "files": [
-    "src"
+    "dist"
   ],
   "scripts": {
-    "test": "mocha test/**/*.test.js",
-    "typecheck": "tsc src/index.d.ts --noEmit",
-    "release:patch": "npm version patch && git push && npm publish"
+    "build": "tsc",
+    "clean": "rm -rf dist",
+    "prebuild": "npm run clean",
+    "test": "npm run build && node --test test/command-apdu.test.js test/response-apdu.test.js",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "release:patch": "npm run build && npm version patch && git push && npm publish"
   },
   "engines": {
     "node": ">=18.0.0"
@@ -48,8 +52,7 @@
     "smartcard": "^3.2.1"
   },
   "devDependencies": {
-    "@types/node": "^25.0.3",
-    "mocha": "^11.7.5",
-    "typescript": "^5.9.3"
+    "@types/node": "^22.0.0",
+    "typescript": "^5.7.0"
   }
 }
