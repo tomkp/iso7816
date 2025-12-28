@@ -31,7 +31,6 @@
   },
   "homepage": "https://github.com/tomkp/iso7816",
   "dependencies": {
-    "apdu": "^0.0.3",
     "card-reader": "^1.0.3",
     "hexify": "^1.0.1"
   },
