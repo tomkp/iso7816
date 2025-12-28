@@ -1,5 +1,5 @@
-const { Devices } = require('smartcard');
-const iso7816 = require('../lib/iso7816-application');
+import { Devices } from 'smartcard';
+import iso7816 from '../src/iso7816-application.js';
 
 const devices = new Devices();
 

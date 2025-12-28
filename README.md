@@ -8,11 +8,15 @@ A high-level API for ISO 7816 smartcard communication built on top of the [smart
 npm install iso7816
 ```
 
+## Requirements
+
+- Node.js 18.0.0 or higher
+
 ## Examples
 
 ```javascript
-const { Devices } = require('smartcard');
-const iso7816 = require('iso7816');
+import { Devices } from 'smartcard';
+import iso7816 from 'iso7816';
 
 const devices = new Devices();
 

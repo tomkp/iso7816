@@ -1,14 +1,21 @@
 {
   "name": "iso7816",
   "version": "1.0.20",
-  "description": "",
-  "main": "lib/iso7816-application.js",
+  "description": "ISO 7816 smartcard communication library",
+  "type": "module",
+  "main": "src/iso7816-application.js",
+  "exports": {
+    ".": "./src/iso7816-application.js"
+  },
+  "files": [
+    "src"
+  ],
   "scripts": {
-    "compile": "babel -d lib/ src/",
-    "compile:watch": "babel -w -d lib/ src/",
-    "test": "npm run compile && mocha test/**/*.test.js",
-    "prepublish": "npm run compile",
-    "release:patch": "npm run compile && npm version patch && git push && npm publish"
+    "test": "mocha test/**/*.test.js",
+    "release:patch": "npm version patch && git push && npm publish"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   },
   "author": "tomkp <tom@tomkp.com>",
   "keywords": [
@@ -19,7 +26,7 @@
     "iso-7816",
     "chip-and-pin",
     "emv",
-    "es6"
+    "esm"
   ],
   "license": "MIT",
   "bugs": {
@@ -35,8 +42,6 @@
     "smartcard": "^3.2.1"
   },
   "devDependencies": {
-    "babel-cli": "^6.6.5",
-    "babel-preset-es2015": "^6.6.0",
     "mocha": "^11.7.5"
   }
 }

@@ -1,8 +1,5 @@
-'use strict';
-
-import CommandApdu from './command-apdu';
-import ResponseApdu from './response-apdu';
-
+import CommandApdu from './command-apdu.js';
+import ResponseApdu from './response-apdu.js';
 
 const ins = {
     APPEND_RECORD: 0xE2,
@@ -25,7 +22,6 @@ const ins = {
     WRITE_RECORD: 0xD2
 };
 
-
 function Iso7816(card) {
     this.card = card;
 }
@@ -34,7 +30,7 @@ Iso7816.prototype.issueCommand = function(commandApdu) {
     return this.card
         .transmit(commandApdu.toBuffer())
         .then(resp => {
-            var response = ResponseApdu(resp);
+            const response = ResponseApdu(resp);
             if (response.hasMoreBytesAvailable()) {
                 return this.getResponse(response.numberOfBytesAvailable());
             } else if (response.isWrongLength()) {
@@ -85,9 +81,8 @@ Iso7816.prototype.getData = function(p1, p2) {
     }));
 };
 
-
 function create(card) {
     return new Iso7816(card);
 }
 
-module.exports = create;
+export default create;
