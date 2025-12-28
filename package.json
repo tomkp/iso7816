@@ -16,6 +16,7 @@
   ],
   "scripts": {
     "test": "mocha test/**/*.test.js",
+    "typecheck": "tsc src/index.d.ts --noEmit",
     "release:patch": "npm version patch && git push && npm publish"
   },
   "engines": {
