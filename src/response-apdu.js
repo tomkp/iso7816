@@ -1,5 +1,3 @@
-'use strict';
-
 const statusCodes = {
     '^9000$': 'Normal processing',
     '^61(.{2})$': 'Normal processing, (sw2 indicates the number of response bytes still available)',
@@ -15,9 +13,6 @@ const statusCodes = {
     '^6300$': 'no info',
     '^6381$': 'last write filled up file',
     '^6382$': 'execution successful after retry',
-//          c0	least significant nibble is a counter....
-//          ..	..valued from 0 to 15
-//          cf
     '^64(.{2})$': 'Execution error',
     '^65(.{2})$': 'Execution error',
     '^6500$': 'no info',
@@ -37,7 +32,6 @@ const statusCodes = {
     '^6f(.{2})$': 'Checking error: no precise diagnosis'
 };
 
-
 function ResponseApdu(buffer) {
     this.buffer = buffer;
     this.data = buffer.toString('hex');
@@ -46,14 +40,13 @@ function ResponseApdu(buffer) {
 ResponseApdu.prototype.getStatus = function() {
     const statusCode = this.getStatusCode();
     let meaning = 'Unknown';
-    for (let prop in statusCodes) {
-        if (statusCodes.hasOwnProperty(prop)) {
-            let result = statusCodes[prop];
+    for (const prop in statusCodes) {
+        if (Object.prototype.hasOwnProperty.call(statusCodes, prop)) {
+            const result = statusCodes[prop];
             if (statusCode.match(prop)) {
                 meaning = result;
                 break;
             }
-
         }
     }
     return {
@@ -61,36 +54,43 @@ ResponseApdu.prototype.getStatus = function() {
         meaning: meaning
     };
 };
+
 ResponseApdu.prototype.getStatusCode = function() {
     return this.data.substr(-4);
 };
+
 ResponseApdu.prototype.isOk = function() {
     return this.getStatusCode() === '9000';
 };
+
 ResponseApdu.prototype.getBuffer = function() {
     return this.buffer;
 };
+
 ResponseApdu.prototype.hasMoreBytesAvailable = function() {
     return this.data.substr(-4, 2) === '61';
 };
+
 ResponseApdu.prototype.numberOfBytesAvailable = function() {
-    let hexLength = this.data.substr(-2, 2);
+    const hexLength = this.data.substr(-2, 2);
     return parseInt(hexLength, 16);
 };
+
 ResponseApdu.prototype.isWrongLength = function() {
     return this.data.substr(-4, 2) === '6c';
 };
+
 ResponseApdu.prototype.correctLength = function() {
-    let hexLength = this.data.substr(-2, 2);
+    const hexLength = this.data.substr(-2, 2);
     return parseInt(hexLength, 16);
 };
+
 ResponseApdu.prototype.toString = function() {
     return this.data;
 };
-
 
 function create(buffer) {
     return new ResponseApdu(buffer);
 }
 
-module.exports = create;
+export default create;
