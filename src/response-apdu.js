@@ -67,7 +67,7 @@ ResponseApdu.prototype.getStatusCode = function() {
 ResponseApdu.prototype.isOk = function() {
     return this.getStatusCode() === '9000';
 };
-ResponseApdu.prototype.buffer = function() {
+ResponseApdu.prototype.getBuffer = function() {
     return this.buffer;
 };
 ResponseApdu.prototype.hasMoreBytesAvailable = function() {
