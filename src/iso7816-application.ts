@@ -55,20 +55,34 @@ export class Iso7816 {
     /**
      * Issue a raw APDU command
      * @param commandApdu The command to send
+     * @param maxRetries Maximum number of retries for wrong length responses (default: 3)
      * @returns Promise resolving to the response
+     * @throws Error if maximum retries exceeded
      */
-    async issueCommand(commandApdu: CommandApdu): Promise<ResponseApdu> {
-        const resp = await this._card.transmit(commandApdu.toBuffer());
-        const response = createResponseApdu(resp);
+    async issueCommand(commandApdu: CommandApdu, maxRetries: number = 3): Promise<ResponseApdu> {
+        let retries = 0;
 
-        if (response.hasMoreBytesAvailable()) {
-            return this.getResponse(response.numberOfBytesAvailable());
-        } else if (response.isWrongLength()) {
-            commandApdu.setLe(response.correctLength());
-            return this.issueCommand(commandApdu);
-        }
+        const execute = async (): Promise<ResponseApdu> => {
+            const resp = await this._card.transmit(commandApdu.toBuffer());
+            const response = createResponseApdu(resp);
 
-        return response;
+            if (response.hasMoreBytesAvailable()) {
+                return this.getResponse(response.numberOfBytesAvailable());
+            } else if (response.isWrongLength()) {
+                if (retries >= maxRetries) {
+                    throw new Error(
+                        `Maximum retries (${maxRetries}) exceeded for wrong length response`
+                    );
+                }
+                retries++;
+                commandApdu.setLe(response.correctLength());
+                return execute();
+            }
+
+            return response;
+        };
+
+        return execute();
     }
 
     /**
