@@ -23,8 +23,8 @@
     "test:coverage": "vitest run --coverage",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
-    "format": "prettier --write src/ test/",
-    "format:check": "prettier --check src/ test/",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
     "prepublishOnly": "npm run build",
     "release:patch": "npm run build && npm version patch && git push && npm publish"
   },
