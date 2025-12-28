@@ -4,8 +4,12 @@
   "description": "ISO 7816 smartcard communication library",
   "type": "module",
   "main": "src/iso7816-application.js",
+  "types": "src/index.d.ts",
   "exports": {
-    ".": "./src/iso7816-application.js"
+    ".": {
+      "types": "./src/index.d.ts",
+      "default": "./src/iso7816-application.js"
+    }
   },
   "files": [
     "src"
@@ -26,7 +30,8 @@
     "iso-7816",
     "chip-and-pin",
     "emv",
-    "esm"
+    "esm",
+    "typescript"
   ],
   "license": "MIT",
   "bugs": {
@@ -42,6 +47,8 @@
     "smartcard": "^3.2.1"
   },
   "devDependencies": {
-    "mocha": "^11.7.5"
+    "@types/node": "^25.0.3",
+    "mocha": "^11.7.5",
+    "typescript": "^5.9.3"
   }
 }
