@@ -1,24 +1,19 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import { createResponseApdu } from '../dist/index.js';
+import { describe, it, expect } from 'vitest';
+import { createResponseApdu } from '../src/index.js';
 
 describe('ResponseApdu', () => {
     describe('constructor', () => {
         it('should throw error for empty buffer', () => {
-            assert.throws(() => createResponseApdu(Buffer.from([])), {
-                message: /at least 2 bytes/i,
-            });
+            expect(() => createResponseApdu(Buffer.from([]))).toThrow(/at least 2 bytes/i);
         });
 
         it('should throw error for single byte buffer', () => {
-            assert.throws(() => createResponseApdu(Buffer.from([0x90])), {
-                message: /at least 2 bytes/i,
-            });
+            expect(() => createResponseApdu(Buffer.from([0x90]))).toThrow(/at least 2 bytes/i);
         });
 
         it('should accept buffer with exactly 2 bytes', () => {
             const response = createResponseApdu(Buffer.from([0x90, 0x00]));
-            assert.strictEqual(response.isOk(), true);
+            expect(response.isOk()).toBe(true);
         });
     });
 
@@ -29,8 +24,8 @@ describe('ResponseApdu', () => {
 
             const result = response.getBuffer();
 
-            assert.ok(Buffer.isBuffer(result), 'getBuffer() should return a Buffer');
-            assert.deepStrictEqual(result, originalBuffer, 'Should return the original buffer');
+            expect(Buffer.isBuffer(result)).toBe(true);
+            expect(result).toEqual(originalBuffer);
         });
     });
 
@@ -38,13 +33,13 @@ describe('ResponseApdu', () => {
         it('should return last 4 hex characters as status code', () => {
             const response = createResponseApdu(Buffer.from([0x6a, 0x82]));
 
-            assert.strictEqual(response.getStatusCode(), '6a82');
+            expect(response.getStatusCode()).toBe('6a82');
         });
 
         it('should extract status from longer response', () => {
             const response = createResponseApdu(Buffer.from([0x01, 0x02, 0x03, 0x90, 0x00]));
 
-            assert.strictEqual(response.getStatusCode(), '9000');
+            expect(response.getStatusCode()).toBe('9000');
         });
     });
 
@@ -52,13 +47,13 @@ describe('ResponseApdu', () => {
         it('should return true for 9000 status', () => {
             const response = createResponseApdu(Buffer.from([0x90, 0x00]));
 
-            assert.strictEqual(response.isOk(), true);
+            expect(response.isOk()).toBe(true);
         });
 
         it('should return false for error status', () => {
             const response = createResponseApdu(Buffer.from([0x6a, 0x82]));
 
-            assert.strictEqual(response.isOk(), false);
+            expect(response.isOk()).toBe(false);
         });
     });
 
@@ -66,13 +61,13 @@ describe('ResponseApdu', () => {
         it('should return true for 61xx status', () => {
             const response = createResponseApdu(Buffer.from([0x61, 0x10]));
 
-            assert.strictEqual(response.hasMoreBytesAvailable(), true);
+            expect(response.hasMoreBytesAvailable()).toBe(true);
         });
 
         it('should return false for 9000 status', () => {
             const response = createResponseApdu(Buffer.from([0x90, 0x00]));
 
-            assert.strictEqual(response.hasMoreBytesAvailable(), false);
+            expect(response.hasMoreBytesAvailable()).toBe(false);
         });
     });
 
@@ -80,7 +75,7 @@ describe('ResponseApdu', () => {
         it('should return number of bytes from 61xx status', () => {
             const response = createResponseApdu(Buffer.from([0x61, 0x10]));
 
-            assert.strictEqual(response.numberOfBytesAvailable(), 16);
+            expect(response.numberOfBytesAvailable()).toBe(16);
         });
     });
 
@@ -88,13 +83,13 @@ describe('ResponseApdu', () => {
         it('should return true for 6cxx status', () => {
             const response = createResponseApdu(Buffer.from([0x6c, 0x20]));
 
-            assert.strictEqual(response.isWrongLength(), true);
+            expect(response.isWrongLength()).toBe(true);
         });
 
         it('should return false for 9000 status', () => {
             const response = createResponseApdu(Buffer.from([0x90, 0x00]));
 
-            assert.strictEqual(response.isWrongLength(), false);
+            expect(response.isWrongLength()).toBe(false);
         });
     });
 
@@ -102,7 +97,7 @@ describe('ResponseApdu', () => {
         it('should return correct length from 6cxx status', () => {
             const response = createResponseApdu(Buffer.from([0x6c, 0x20]));
 
-            assert.strictEqual(response.correctLength(), 32);
+            expect(response.correctLength()).toBe(32);
         });
     });
 
@@ -110,7 +105,7 @@ describe('ResponseApdu', () => {
         it('should return hex string of response', () => {
             const response = createResponseApdu(Buffer.from([0x90, 0x00]));
 
-            assert.strictEqual(response.toString(), '9000');
+            expect(response.toString()).toBe('9000');
         });
     });
 
@@ -120,8 +115,8 @@ describe('ResponseApdu', () => {
 
             const status = response.getStatus();
 
-            assert.strictEqual(status.code, '9000');
-            assert.strictEqual(status.meaning, 'Normal processing');
+            expect(status.code).toBe('9000');
+            expect(status.meaning).toBe('Normal processing');
         });
 
         it('should return correct meaning for file not found (6a82)', () => {
@@ -129,8 +124,8 @@ describe('ResponseApdu', () => {
 
             const status = response.getStatus();
 
-            assert.strictEqual(status.code, '6a82');
-            assert.ok(status.meaning.toLowerCase().includes('not found'));
+            expect(status.code).toBe('6a82');
+            expect(status.meaning.toLowerCase()).toContain('not found');
         });
 
         it('should return correct meaning for authentication failed (6300)', () => {
@@ -138,8 +133,8 @@ describe('ResponseApdu', () => {
 
             const status = response.getStatus();
 
-            assert.strictEqual(status.code, '6300');
-            assert.ok(status.meaning.toLowerCase().includes('authentication'));
+            expect(status.code).toBe('6300');
+            expect(status.meaning.toLowerCase()).toContain('authentication');
         });
 
         it('should return Unknown for unrecognized status code', () => {
@@ -147,8 +142,8 @@ describe('ResponseApdu', () => {
 
             const status = response.getStatus();
 
-            assert.strictEqual(status.code, 'aabb');
-            assert.strictEqual(status.meaning, 'Unknown');
+            expect(status.code).toBe('aabb');
+            expect(status.meaning).toBe('Unknown');
         });
     });
 });
