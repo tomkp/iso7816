@@ -26,7 +26,7 @@
     "format": "prettier --write src/",
     "format:check": "prettier --check src/",
     "prepublishOnly": "npm run build",
-    "release:patch": "npm run build && npm version patch && git push && npm publish"
+    "release:patch": "npm run lint && npm run typecheck && npm test && npm run build && npm version patch && git push --follow-tags && npm publish"
   },
   "engines": {
     "node": ">=18.0.0"
