@@ -1,6 +1,8 @@
-# ISO 7816 Smartcard API
+# ISO 7816
 
-A high-level API for ISO 7816 smartcard communication built on top of the [smartcard](https://www.npmjs.com/package/smartcard) package.
+A library for building and parsing ISO 7816 APDU commands and responses.
+
+This library is card reader agnostic - it works with any transport that can send/receive byte arrays. The examples below use the [smartcard](https://www.npmjs.com/package/smartcard) package, but you can use any PC/SC library or even a custom transport.
 
 ## Installation
 
@@ -11,14 +13,14 @@ npm install iso7816
 ## Requirements
 
 - Node.js 18.0.0 or higher
-- PC/SC driver installed on your system:
-  - **macOS**: Built-in (no installation required)
-  - **Windows**: Built-in (no installation required)
-  - **Linux**: Install `pcsclite` (`sudo apt-get install libpcsclite-dev` on Debian/Ubuntu)
 
 ## Usage
 
-### JavaScript
+### With smartcard package
+
+```bash
+npm install iso7816 smartcard
+```
 
 ```javascript
 import { Devices } from 'smartcard';
@@ -56,52 +58,64 @@ devices.on('error', (error) => {
 devices.start();
 ```
 
-### TypeScript
+### With custom transport
 
 ```typescript
-import { Devices } from 'smartcard';
-import iso7816, { Iso7816, ResponseApdu, createCommandApdu } from 'iso7816';
+import iso7816, { createCommandApdu, createResponseApdu } from 'iso7816';
 
-const devices = new Devices();
+// Any object with a transmit method works
+const card = {
+    atr: Buffer.from([0x3b, 0x00]),
+    async transmit(command: Buffer): Promise<Buffer> {
+        // Send command to your card reader and return response
+        return yourCardReader.send(command);
+    },
+};
 
-devices.on('card-inserted', async ({ reader, card }) => {
-    const application: Iso7816 = iso7816(card);
+const application = iso7816(card);
+const response = await application.selectFile([0xa0, 0x00, 0x00]);
+```
 
-    try {
-        const response: ResponseApdu = await application.selectFile([0xa0, 0x00, 0x00]);
+### Building APDUs directly
 
-        if (response.isOk()) {
-            console.log('Selection successful');
-        } else {
-            console.log(`Error: ${response.getStatus().meaning}`);
-        }
-    } catch (error) {
-        console.error('Error:', error);
-    }
+```typescript
+import { createCommandApdu, createResponseApdu } from 'iso7816';
+
+// Build a SELECT command
+const command = createCommandApdu({
+    cla: 0x00,
+    ins: 0xa4,
+    p1: 0x04,
+    p2: 0x00,
+    data: [0xa0, 0x00, 0x00],
 });
 
-devices.start();
+console.log(command.toString()); // "00a4040003a0000000"
+console.log(command.toBuffer()); // <Buffer 00 a4 04 00 03 a0 00 00 00>
+
+// Parse a response
+const response = createResponseApdu(Buffer.from([0x90, 0x00]));
+console.log(response.isOk()); // true
+console.log(response.getStatus()); // { code: '9000', meaning: 'Normal processing' }
 ```
 
 ## API
 
 ### `iso7816(card)`
 
-Create an ISO 7816 application instance for the given card.
+Create an ISO 7816 application instance.
 
-- `card` - A card object from the smartcard package (received in `card-inserted` event)
+- `card` - Any object with `transmit(buffer: Buffer): Promise<Buffer>` method
 
-Returns an `Iso7816` instance with the following methods:
+Returns an `Iso7816` instance.
 
 ### `application.selectFile(bytes, p1?, p2?)`
 
-Select a file on the smartcard.
+Select a file on the card.
 
 - `bytes` - Array of bytes representing the file identifier (e.g., AID)
 - `p1` - Optional P1 parameter (default: `0x04`)
 - `p2` - Optional P2 parameter (default: `0x00`)
-
-Returns a Promise that resolves to a `ResponseApdu`.
 
 ### `application.readRecord(sfi, record)`
 
@@ -110,24 +124,13 @@ Read a record from a file.
 - `sfi` - Short File Identifier
 - `record` - Record number
 
-Returns a Promise that resolves to a `ResponseApdu`.
-
 ### `application.getData(p1, p2)`
 
 Get data from the card.
 
-- `p1` - P1 parameter
-- `p2` - P2 parameter
-
-Returns a Promise that resolves to a `ResponseApdu`.
-
 ### `application.getResponse(length)`
 
 Get additional response bytes.
-
-- `length` - Number of bytes to retrieve
-
-Returns a Promise that resolves to a `ResponseApdu`.
 
 ### `application.issueCommand(commandApdu, maxRetries?)`
 
@@ -136,45 +139,41 @@ Issue a raw APDU command.
 - `commandApdu` - A `CommandApdu` instance
 - `maxRetries` - Maximum retries for wrong length responses (default: `3`)
 
-Returns a Promise that resolves to a `ResponseApdu`.
-
 ### `createCommandApdu(options)`
 
 Create a command APDU.
 
 ```typescript
-import { createCommandApdu } from 'iso7816';
-
 const apdu = createCommandApdu({
-    cla: 0x00,
-    ins: 0xa4,
-    p1: 0x04,
-    p2: 0x00,
-    data: [0xa0, 0x00, 0x00],
-    le: 0x00,
+    cla: 0x00,    // Class byte
+    ins: 0xa4,    // Instruction byte
+    p1: 0x04,     // Parameter 1
+    p2: 0x00,     // Parameter 2
+    data: [...], // Optional command data
+    le: 0x00,     // Optional expected response length
 });
+
+apdu.toString();    // Hex string
+apdu.toBuffer();    // Node.js Buffer
+apdu.toByteArray(); // number[]
+apdu.setLe(0x10);   // Update expected length
 ```
 
-### `ResponseApdu` methods
+### `createResponseApdu(buffer)`
 
-- `isOk()` - Returns `true` if status is 9000 (success)
-- `getStatusCode()` - Returns 4-character hex status code (e.g., "9000")
-- `getStatus()` - Returns `{ code: string, meaning: string }`
-- `getBuffer()` - Returns the raw response buffer
-- `toString()` - Returns hex string of the response
+Parse a response APDU.
 
-## Compatible Readers
+```typescript
+const response = createResponseApdu(buffer);
 
-Tested on Mac OSX with the SCM SCR3500 Smart Card Reader.
-This library should work with most PC/SC readers.
-
-<div align="center">
-   <img src="docs/scr3500-collapsed.JPG" width=600 style="margin:1rem;" />
-</div>
-
-<div align="center">
-   <img src="docs/scr3500-expanded.JPG" width=600 style="margin:1rem;" />
-</div>
+response.isOk();              // true if status is 9000
+response.getStatusCode();     // "9000"
+response.getStatus();         // { code: "9000", meaning: "Normal processing" }
+response.getBuffer();         // Raw buffer
+response.toString();          // Hex string
+response.hasMoreBytesAvailable(); // true if 61xx status
+response.isWrongLength();     // true if 6cxx status
+```
 
 ## License
 

@@ -26,7 +26,7 @@ export const Instructions = {
 } as const;
 
 /**
- * Card interface (from smartcard package)
+ * Card interface for any transport that can send/receive APDUs
  */
 export interface Card {
     /** Card ATR (Answer To Reset) */
@@ -36,7 +36,7 @@ export interface Card {
 }
 
 /**
- * ISO 7816 Application class for smartcard communication
+ * ISO 7816 Application class for APDU communication
  */
 export class Iso7816 {
     private readonly _card: Card;
