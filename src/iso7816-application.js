@@ -26,33 +26,26 @@ const ins = {
 };
 
 
-function Iso7816(devices, cardReader) {
-    this.devices = devices;
-    this.cardReader = cardReader;
+function Iso7816(card) {
+    this.card = card;
 }
 
 Iso7816.prototype.issueCommand = function(commandApdu) {
-    //console.log(`Iso7816.issueCommand '${commandApdu}' `);
-    return this.devices
-        .issueCommand(this.cardReader, commandApdu.toBuffer())
+    return this.card
+        .transmit(commandApdu.toBuffer())
         .then(resp => {
             var response = ResponseApdu(resp);
-            //console.log(`status code '${response.statusCode()}'`);
             if (response.hasMoreBytesAvailable()) {
-                //console.log(`has '${response.numberOfBytesAvailable()}' more bytes available`);
                 return this.getResponse(response.numberOfBytesAvailable());
             } else if (response.isWrongLength()) {
-                //console.log(`'le' should be '${response.correctLength()}' bytes`);
                 commandApdu.setLe(response.correctLength());
                 return this.issueCommand(commandApdu);
             }
-            //console.log(`return response '${response}' `);
             return response;
         });
 };
 
 Iso7816.prototype.selectFile = function(bytes, p1, p2) {
-    //console.log(`Iso7816.selectFile, file='${bytes}'`);
     return this.issueCommand(CommandApdu({
         cla: 0x00,
         ins: ins.SELECT_FILE,
@@ -63,7 +56,6 @@ Iso7816.prototype.selectFile = function(bytes, p1, p2) {
 };
 
 Iso7816.prototype.getResponse = function(length) {
-    //console.log(`Iso7816.getResponse, length='${length}'`);
     return this.issueCommand(CommandApdu({
         cla: 0x00,
         ins: ins.GET_RESPONSE,
@@ -74,7 +66,6 @@ Iso7816.prototype.getResponse = function(length) {
 };
 
 Iso7816.prototype.readRecord = function(sfi, record) {
-    //console.log(`Iso7816.readRecord, sfi='${sfi}', record=${record}`);
     return this.issueCommand(CommandApdu({
         cla: 0x00,
         ins: ins.READ_RECORD,
@@ -85,7 +76,6 @@ Iso7816.prototype.readRecord = function(sfi, record) {
 };
 
 Iso7816.prototype.getData = function(p1, p2) {
-    //console.log(`Iso7816.getData, p1='${p1}', p2=${p2}`);
     return this.issueCommand(CommandApdu({
         cla: 0x00,
         ins: ins.GET_DATA,
@@ -96,8 +86,8 @@ Iso7816.prototype.getData = function(p1, p2) {
 };
 
 
-function create(devices, cardReader) {
-    return new Iso7816(devices, cardReader);
+function create(card) {
+    return new Iso7816(card);
 }
 
 module.exports = create;
