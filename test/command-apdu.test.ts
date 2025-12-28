@@ -1,6 +1,5 @@
-import { describe, it } from 'node:test';
-import assert from 'node:assert';
-import { createCommandApdu } from '../dist/index.js';
+import { describe, it, expect } from 'vitest';
+import { createCommandApdu } from '../src/index.js';
 
 describe('CommandApdu', () => {
     describe('toString()', () => {
@@ -14,8 +13,8 @@ describe('CommandApdu', () => {
 
             const result = apdu.toString();
 
-            assert.ok(typeof result === 'string', 'toString() should return a string');
-            assert.ok(result.length > 0, 'toString() should return a non-empty string');
+            expect(typeof result).toBe('string');
+            expect(result.length).toBeGreaterThan(0);
         });
 
         it('should return correct hex for a SELECT command', () => {
@@ -29,7 +28,7 @@ describe('CommandApdu', () => {
 
             const result = apdu.toString();
 
-            assert.ok(result.toLowerCase().includes('00a40400'), 'Should contain command header');
+            expect(result.toLowerCase()).toContain('00a40400');
         });
     });
 
@@ -44,7 +43,7 @@ describe('CommandApdu', () => {
 
             const result = apdu.toBuffer();
 
-            assert.ok(Buffer.isBuffer(result), 'toBuffer() should return a Buffer');
+            expect(Buffer.isBuffer(result)).toBe(true);
         });
 
         it('should contain correct bytes', () => {
@@ -57,10 +56,10 @@ describe('CommandApdu', () => {
 
             const result = apdu.toBuffer();
 
-            assert.strictEqual(result[0], 0x00, 'CLA should be 0x00');
-            assert.strictEqual(result[1], 0xa4, 'INS should be 0xA4');
-            assert.strictEqual(result[2], 0x04, 'P1 should be 0x04');
-            assert.strictEqual(result[3], 0x00, 'P2 should be 0x00');
+            expect(result[0]).toBe(0x00);
+            expect(result[1]).toBe(0xa4);
+            expect(result[2]).toBe(0x04);
+            expect(result[3]).toBe(0x00);
         });
     });
 
@@ -75,9 +74,9 @@ describe('CommandApdu', () => {
 
             const result = apdu.toByteArray();
 
-            assert.ok(Array.isArray(result), 'toByteArray() should return an array');
-            assert.strictEqual(result[0], 0x00);
-            assert.strictEqual(result[1], 0xa4);
+            expect(Array.isArray(result)).toBe(true);
+            expect(result[0]).toBe(0x00);
+            expect(result[1]).toBe(0xa4);
         });
     });
 
@@ -93,11 +92,7 @@ describe('CommandApdu', () => {
             apdu.setLe(0x10);
             const bytes = apdu.toByteArray();
 
-            assert.strictEqual(
-                bytes[bytes.length - 1],
-                0x10,
-                'Last byte should be the new LE value'
-            );
+            expect(bytes[bytes.length - 1]).toBe(0x10);
         });
     });
 
@@ -114,7 +109,7 @@ describe('CommandApdu', () => {
             bytes1[0] = 0xff;
 
             const bytes2 = apdu.bytes;
-            assert.strictEqual(bytes2[0], 0x00, 'Original bytes should be unchanged');
+            expect(bytes2[0]).toBe(0x00);
         });
     });
 
@@ -130,13 +125,12 @@ describe('CommandApdu', () => {
 
             const bytes = apdu.toByteArray();
 
-            // Case 2: CLA INS P1 P2 Le
-            assert.strictEqual(bytes.length, 5);
-            assert.strictEqual(bytes[0], 0x00);
-            assert.strictEqual(bytes[1], 0xc0);
-            assert.strictEqual(bytes[2], 0x00);
-            assert.strictEqual(bytes[3], 0x00);
-            assert.strictEqual(bytes[4], 0x10);
+            expect(bytes.length).toBe(5);
+            expect(bytes[0]).toBe(0x00);
+            expect(bytes[1]).toBe(0xc0);
+            expect(bytes[2]).toBe(0x00);
+            expect(bytes[3]).toBe(0x00);
+            expect(bytes[4]).toBe(0x10);
         });
 
         it('should build APDU with data and Le - Case 4', () => {
@@ -151,17 +145,16 @@ describe('CommandApdu', () => {
 
             const bytes = apdu.toByteArray();
 
-            // Case 4: CLA INS P1 P2 Lc Data Le
-            assert.strictEqual(bytes.length, 9);
-            assert.strictEqual(bytes[0], 0x00); // CLA
-            assert.strictEqual(bytes[1], 0xa4); // INS
-            assert.strictEqual(bytes[2], 0x04); // P1
-            assert.strictEqual(bytes[3], 0x00); // P2
-            assert.strictEqual(bytes[4], 0x03); // Lc (data length)
-            assert.strictEqual(bytes[5], 0xa0); // Data byte 1
-            assert.strictEqual(bytes[6], 0x00); // Data byte 2
-            assert.strictEqual(bytes[7], 0x00); // Data byte 3
-            assert.strictEqual(bytes[8], 0x10); // Le
+            expect(bytes.length).toBe(9);
+            expect(bytes[0]).toBe(0x00);
+            expect(bytes[1]).toBe(0xa4);
+            expect(bytes[2]).toBe(0x04);
+            expect(bytes[3]).toBe(0x00);
+            expect(bytes[4]).toBe(0x03);
+            expect(bytes[5]).toBe(0xa0);
+            expect(bytes[6]).toBe(0x00);
+            expect(bytes[7]).toBe(0x00);
+            expect(bytes[8]).toBe(0x10);
         });
 
         it('should handle larger data arrays', () => {
@@ -176,9 +169,8 @@ describe('CommandApdu', () => {
 
             const bytes = apdu.toByteArray();
 
-            // CLA INS P1 P2 Lc Data Le
-            assert.strictEqual(bytes.length, 4 + 1 + 100 + 1);
-            assert.strictEqual(bytes[4], 100); // Lc should be 100
+            expect(bytes.length).toBe(4 + 1 + 100 + 1);
+            expect(bytes[4]).toBe(100);
         });
 
         it('should include data correctly in output', () => {
@@ -192,8 +184,7 @@ describe('CommandApdu', () => {
 
             const hex = apdu.toString();
 
-            // Should contain: 00 a4 04 00 04 31 50 41 59 00
-            assert.strictEqual(hex, '00a404000431504159' + '00');
+            expect(hex).toBe('00a40400043150415900');
         });
     });
 });
