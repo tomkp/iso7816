@@ -18,7 +18,7 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "test": "npm run build && node --test test/command-apdu.test.js test/response-apdu.test.js",
+    "test": "npm run build && node --test test/command-apdu.test.js test/response-apdu.test.js test/iso7816-application.test.js",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src/",
     "format": "prettier --write src/ test/",
