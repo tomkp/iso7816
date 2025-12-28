@@ -29,7 +29,7 @@
     "release:patch": "npm run lint && npm run typecheck && npm test && npm run build && npm version patch && git push --follow-tags && npm publish"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=20.0.0"
   },
   "author": "tomkp <tom@tomkp.com>",
   "keywords": [
