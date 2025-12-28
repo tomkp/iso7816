@@ -31,8 +31,8 @@
   },
   "homepage": "https://github.com/tomkp/iso7816",
   "dependencies": {
-    "card-reader": "^1.0.3",
-    "hexify": "^1.0.1"
+    "hexify": "^1.0.1",
+    "smartcard": "^3.2.1"
   },
   "devDependencies": {
     "babel-cli": "^6.6.5",
