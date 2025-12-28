@@ -18,7 +18,7 @@
     "build": "tsc",
     "clean": "rm -rf dist",
     "prebuild": "npm run clean",
-    "test": "npm run build && node --test 'test/**/*.test.js'",
+    "test": "npm run build && node --test test/command-apdu.test.js test/response-apdu.test.js",
     "typecheck": "tsc --noEmit",
     "prepublishOnly": "npm run build",
     "release:patch": "npm run build && npm version patch && git push && npm publish"
