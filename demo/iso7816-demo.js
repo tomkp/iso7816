@@ -1,35 +1,39 @@
 import { Devices } from 'smartcard';
-import iso7816 from '../src/iso7816-application.js';
+import iso7816 from '../dist/index.js';
 
 const devices = new Devices();
 
-devices.on('reader-attached', function (reader) {
+devices.on('reader-attached', (reader) => {
     console.log(`Reader '${reader.name}' attached`);
 });
 
-devices.on('reader-detached', function (reader) {
+devices.on('reader-detached', (reader) => {
     console.log(`Reader '${reader.name}' detached`);
 });
 
-devices.on('card-removed', function ({ reader }) {
+devices.on('card-removed', ({ reader }) => {
     console.log(`Card removed from '${reader.name}'`);
 });
 
-devices.on('error', function (error) {
-    console.log(`Error: ${error.message}`);
+devices.on('error', (error) => {
+    console.error(`Error: ${error.message}`);
 });
 
-devices.on('card-inserted', function ({ reader, card }) {
-    console.log(`Card inserted into '${reader.name}', atr: '${card.atr.toString('hex')}'`);
+devices.on('card-inserted', async ({ reader, card }) => {
+    console.log(`Card inserted into '${reader.name}', ATR: ${card.atr.toString('hex')}`);
 
     const application = iso7816(card);
-    application
-        .selectFile([0x31, 0x50, 0x41, 0x59, 0x2E, 0x53, 0x59, 0x53, 0x2E, 0x44, 0x44, 0x46, 0x30, 0x31])
-        .then(function (response) {
-            console.info(`Select PSE Response: '${response}' '${response.getStatus().meaning}'`);
-        }).catch(function (error) {
-            console.error('Error:', error, error.stack);
-        });
+
+    try {
+        // Select PSE (Payment System Environment)
+        const response = await application.selectFile([
+            0x31, 0x50, 0x41, 0x59, 0x2e, 0x53, 0x59, 0x53, 0x2e, 0x44, 0x44, 0x46, 0x30, 0x31,
+        ]);
+
+        console.log(`Select PSE Response: ${response} (${response.getStatus().meaning})`);
+    } catch (error) {
+        console.error('Error:', error.message);
+    }
 });
 
 devices.start();
