@@ -3,6 +3,25 @@ import assert from 'node:assert';
 import { createResponseApdu } from '../dist/index.js';
 
 describe('ResponseApdu', () => {
+    describe('constructor', () => {
+        it('should throw error for empty buffer', () => {
+            assert.throws(() => createResponseApdu(Buffer.from([])), {
+                message: /at least 2 bytes/i,
+            });
+        });
+
+        it('should throw error for single byte buffer', () => {
+            assert.throws(() => createResponseApdu(Buffer.from([0x90])), {
+                message: /at least 2 bytes/i,
+            });
+        });
+
+        it('should accept buffer with exactly 2 bytes', () => {
+            const response = createResponseApdu(Buffer.from([0x90, 0x00]));
+            assert.strictEqual(response.isOk(), true);
+        });
+    });
+
     describe('getBuffer()', () => {
         it('should return the original buffer', () => {
             const originalBuffer = Buffer.from([0x90, 0x00]);
@@ -103,6 +122,33 @@ describe('ResponseApdu', () => {
 
             assert.strictEqual(status.code, '9000');
             assert.strictEqual(status.meaning, 'Normal processing');
+        });
+
+        it('should return correct meaning for file not found (6a82)', () => {
+            const response = createResponseApdu(Buffer.from([0x6a, 0x82]));
+
+            const status = response.getStatus();
+
+            assert.strictEqual(status.code, '6a82');
+            assert.ok(status.meaning.toLowerCase().includes('not found'));
+        });
+
+        it('should return correct meaning for authentication failed (6300)', () => {
+            const response = createResponseApdu(Buffer.from([0x63, 0x00]));
+
+            const status = response.getStatus();
+
+            assert.strictEqual(status.code, '6300');
+            assert.ok(status.meaning.toLowerCase().includes('authentication'));
+        });
+
+        it('should return Unknown for unrecognized status code', () => {
+            const response = createResponseApdu(Buffer.from([0xaa, 0xbb]));
+
+            const status = response.getStatus();
+
+            assert.strictEqual(status.code, 'aabb');
+            assert.strictEqual(status.meaning, 'Unknown');
         });
     });
 });
