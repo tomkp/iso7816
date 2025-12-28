@@ -1,10 +1,11 @@
-import assert from 'assert';
-import CommandApdu from '../src/command-apdu.js';
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import { createCommandApdu } from '../dist/index.js';
 
-describe('CommandApdu', function() {
-    describe('toString()', function() {
-        it('should return hex string representation of the APDU', function() {
-            const apdu = CommandApdu({
+describe('CommandApdu', () => {
+    describe('toString()', () => {
+        it('should return hex string representation of the APDU', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
@@ -17,8 +18,8 @@ describe('CommandApdu', function() {
             assert.ok(result.length > 0, 'toString() should return a non-empty string');
         });
 
-        it('should return correct hex for a SELECT command', function() {
-            const apdu = CommandApdu({
+        it('should return correct hex for a SELECT command', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
@@ -32,9 +33,9 @@ describe('CommandApdu', function() {
         });
     });
 
-    describe('toBuffer()', function() {
-        it('should return a Buffer instance', function() {
-            const apdu = CommandApdu({
+    describe('toBuffer()', () => {
+        it('should return a Buffer instance', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
@@ -46,8 +47,8 @@ describe('CommandApdu', function() {
             assert.ok(Buffer.isBuffer(result), 'toBuffer() should return a Buffer');
         });
 
-        it('should contain correct bytes', function() {
-            const apdu = CommandApdu({
+        it('should contain correct bytes', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
@@ -63,9 +64,9 @@ describe('CommandApdu', function() {
         });
     });
 
-    describe('toByteArray()', function() {
-        it('should return an array of bytes', function() {
-            const apdu = CommandApdu({
+    describe('toByteArray()', () => {
+        it('should return an array of bytes', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
@@ -80,9 +81,9 @@ describe('CommandApdu', function() {
         });
     });
 
-    describe('setLe()', function() {
-        it('should update the LE byte', function() {
-            const apdu = CommandApdu({
+    describe('setLe()', () => {
+        it('should update the LE byte', () => {
+            const apdu = createCommandApdu({
                 cla: 0x00,
                 ins: 0xA4,
                 p1: 0x04,
