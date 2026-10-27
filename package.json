@@ -1,6 +1,6 @@
 {
   "name": "iso7816",
-  "version": "1.0.20",
+  "version": "2.0.0",
   "description": "ISO 7816 APDU command and response handling library",
   "type": "module",
   "main": "dist/index.js",
