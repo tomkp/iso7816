@@ -1,4 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
+import fc from 'fast-check';
 import createIso7816 from './iso7816-application.js';
 import type { Card } from './iso7816-application.js';
 import createCommandApdu from './command-apdu.js';
@@ -128,6 +129,64 @@ describe('Iso7816', () => {
 
             expect(response.isOk()).toBe(true);
             expect(mockCard.transmit).toHaveBeenCalledTimes(2);
+        });
+
+        it('should keep the data from every GET RESPONSE when the card sends it in chunks', async () => {
+            const data = Buffer.from(Array.from({ length: 300 }, (_, i) => i & 0xff));
+            const transmit = vi.fn<Card['transmit']>();
+            transmit
+                .mockResolvedValueOnce(Buffer.from([0x61, 0x00])) // 256 or more bytes waiting
+                .mockResolvedValueOnce(
+                    Buffer.concat([data.subarray(0, 256), Buffer.from([0x61, 44])])
+                )
+                .mockResolvedValueOnce(
+                    Buffer.concat([data.subarray(256), Buffer.from([0x90, 0x00])])
+                );
+            const app = createIso7816({ atr: Buffer.from([0x3b, 0x00]), transmit });
+
+            const response = await app.readRecord(1, 1);
+
+            expect(response.getBuffer()).toEqual(Buffer.concat([data, Buffer.from([0x90, 0x00])]));
+        });
+
+        it('should return all the data, in order, however the card splits it', async () => {
+            await fc.assert(
+                fc.asyncProperty(
+                    // Data sent with the command's own 61xx response, which may be empty
+                    fc.uint8Array({ maxLength: 256 }),
+                    // Data sent with each GET RESPONSE
+                    fc.array(fc.uint8Array({ minLength: 1, maxLength: 256 }), { maxLength: 6 }),
+                    async (first, chunks) => {
+                        // Each response announces the size of the next chunk with 61xx, where
+                        // 00 means 256. The last one ends with 9000.
+                        const all = [first, ...chunks];
+                        const responses = all.map((chunk, i) => {
+                            const next = all[i + 1];
+                            const sw = next ? [0x61, next.length & 0xff] : [0x90, 0x00];
+                            return Buffer.from([...chunk, ...sw]);
+                        });
+                        const transmit = vi.fn<Card['transmit']>();
+                        responses.forEach((r) => transmit.mockResolvedValueOnce(r));
+                        const app = createIso7816({ atr: Buffer.from([0x3b, 0x00]), transmit });
+
+                        const response = await app.issueCommand(
+                            createCommandApdu({ cla: 0x00, ins: 0xb0, p1: 0x00, p2: 0x00 })
+                        );
+
+                        const expected = Buffer.concat([...all, Buffer.from([0x90, 0x00])]);
+                        const getResponses = transmit.mock.calls
+                            .slice(1)
+                            .map(([c]) => Buffer.from(c));
+                        return (
+                            response.getBuffer().equals(expected) &&
+                            getResponses.length === chunks.length &&
+                            getResponses.every(
+                                (c, k) => c[1] === 0xc0 && c[4] === (chunks[k].length & 0xff)
+                            )
+                        );
+                    }
+                )
+            );
         });
     });
 
