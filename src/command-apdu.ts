@@ -50,10 +50,12 @@ export class CommandApdu {
             checkByte('p1', p1),
             checkByte('p2', p2),
         ];
-        if (data.length > MAX_DATA_LENGTH) {
-            throw new RangeError(`data is ${data.length} bytes; the maximum is ${MAX_DATA_LENGTH}`);
-        }
         this._data = Array.from(data, (b, i) => checkByte(`data[${i}]`, b));
+        if (this._data.length > MAX_DATA_LENGTH) {
+            throw new RangeError(
+                `data is ${this._data.length} bytes; the maximum is ${MAX_DATA_LENGTH}`
+            );
+        }
         this._bytes = encode(this._header, this._data, checkLe(le));
     }
 

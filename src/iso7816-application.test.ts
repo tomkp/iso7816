@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import createIso7816 from './iso7816-application.js';
 import type { Card } from './iso7816-application.js';
+import createCommandApdu from './command-apdu.js';
 
 describe('Iso7816', () => {
     describe('issueCommand()', () => {
@@ -51,6 +52,40 @@ describe('Iso7816', () => {
 
             expect(response.isOk()).toBe(true);
             expect(mockCard.transmit).toHaveBeenCalledTimes(2);
+        });
+
+        it('should retry an extended command that gets 6C00 with Le 256, not 65536', async () => {
+            const transmit = vi.fn<Card['transmit']>();
+            transmit
+                .mockResolvedValueOnce(Buffer.from([0x6c, 0x00]))
+                .mockResolvedValueOnce(Buffer.from([0x90, 0x00]));
+            const app = createIso7816({ atr: Buffer.from([0x3b, 0x00]), transmit });
+
+            const extended = createCommandApdu({
+                cla: 0x00,
+                ins: 0xd6,
+                p1: 0x00,
+                p2: 0x00,
+                data: new Array<number>(300).fill(0),
+            });
+            const response = await app.issueCommand(extended);
+
+            expect(response.isOk()).toBe(true);
+            const retried = transmit.mock.calls[1][0];
+            expect(retried.subarray(-2).toString('hex')).toBe('0100');
+        });
+    });
+
+    describe('invalid arguments', () => {
+        it('should reject, not throw, when a command cannot be encoded', async () => {
+            const app = createIso7816({
+                atr: Buffer.from([0x3b, 0x00]),
+                transmit: vi.fn(() => Promise.resolve(Buffer.from([0x90, 0x00]))),
+            });
+
+            const result = app.readRecord(32, 1); // P2 would be (32 << 3) + 4 = 260
+
+            await expect(result).rejects.toThrow(RangeError);
         });
     });
 

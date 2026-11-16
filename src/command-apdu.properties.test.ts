@@ -253,6 +253,16 @@ describe('CommandApdu specification', () => {
                 rejects(() => createCommandApdu({ cla: 0, ins: 0xd6, p1: 0, p2: 0, data }))
             ).toBe(true);
         });
+
+        it('data longer than 65535 bytes that has no length, such as a generator', () => {
+            function* zeros(n: number) {
+                for (let i = 0; i < n; i++) yield 0;
+            }
+            const data = zeros(65536) as unknown as number[];
+            expect(
+                rejects(() => createCommandApdu({ cla: 0, ins: 0xd6, p1: 0, p2: 0, data }))
+            ).toBe(true);
+        });
     });
 
     describe('6. setLe', () => {
