@@ -75,7 +75,9 @@ export class Iso7816 {
                     );
                 }
                 retries++;
-                commandApdu.setLe(response.correctLength());
+                // SW2 of 00 means exactly 256. setLe(0) would ask for the maximum, which is
+                // 65536 for an extended command.
+                commandApdu.setLe(response.correctLength() || 256);
                 return execute();
             }
 
@@ -92,7 +94,7 @@ export class Iso7816 {
      * @param p2 P2 parameter (default: 0x00)
      * @returns Promise resolving to the response
      */
-    selectFile(bytes: number[], p1: number = 0x04, p2: number = 0x00): Promise<ResponseApdu> {
+    async selectFile(bytes: number[], p1: number = 0x04, p2: number = 0x00): Promise<ResponseApdu> {
         return this.issueCommand(
             createCommandApdu({
                 cla: 0x00,
@@ -109,7 +111,7 @@ export class Iso7816 {
      * @param length Number of bytes to retrieve
      * @returns Promise resolving to the response
      */
-    getResponse(length: number): Promise<ResponseApdu> {
+    async getResponse(length: number): Promise<ResponseApdu> {
         return this.issueCommand(
             createCommandApdu({
                 cla: 0x00,
@@ -127,7 +129,7 @@ export class Iso7816 {
      * @param record Record number
      * @returns Promise resolving to the response
      */
-    readRecord(sfi: number, record: number): Promise<ResponseApdu> {
+    async readRecord(sfi: number, record: number): Promise<ResponseApdu> {
         return this.issueCommand(
             createCommandApdu({
                 cla: 0x00,
@@ -145,7 +147,7 @@ export class Iso7816 {
      * @param p2 P2 parameter
      * @returns Promise resolving to the response
      */
-    getData(p1: number, p2: number): Promise<ResponseApdu> {
+    async getData(p1: number, p2: number): Promise<ResponseApdu> {
         return this.issueCommand(
             createCommandApdu({
                 cla: 0x00,
