@@ -53,7 +53,8 @@ export class Iso7816 {
     }
 
     /**
-     * Issue a raw APDU command
+     * Issue a raw APDU command. When the card answers 61xx, sends GET RESPONSE until it has
+     * everything, and returns all the data with the final status word.
      * @param commandApdu The command to send
      * @param maxRetries Maximum number of retries for wrong length responses (default: 3)
      * @returns Promise resolving to the response
@@ -67,7 +68,11 @@ export class Iso7816 {
             const response = createResponseApdu(resp);
 
             if (response.hasMoreBytesAvailable()) {
-                return this.getResponse(response.numberOfBytesAvailable());
+                // Keep any data that came with this response, then add the rest. getResponse
+                // follows further 61xx responses the same way.
+                const rest = await this.getResponse(response.numberOfBytesAvailable());
+                const data = response.getBuffer().subarray(0, -2);
+                return createResponseApdu(Buffer.concat([data, rest.getBuffer()]));
             } else if (response.isWrongLength()) {
                 if (retries >= maxRetries) {
                     throw new Error(

@@ -134,7 +134,7 @@ Get additional response bytes.
 
 ### `application.issueCommand(commandApdu, maxRetries?)`
 
-Issue a raw APDU command.
+Issue a raw APDU command. When the card answers `61xx` (more data available), this sends GET RESPONSE until the card has sent everything, and returns all the data with the final status word.
 
 - `commandApdu` - A `CommandApdu` instance
 - `maxRetries` - Maximum retries for wrong length responses (default: `3`)
