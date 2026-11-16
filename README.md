@@ -149,8 +149,8 @@ const apdu = createCommandApdu({
     ins: 0xa4,    // Instruction byte
     p1: 0x04,     // Parameter 1
     p2: 0x00,     // Parameter 2
-    data: [...], // Optional command data
-    le: 0x00,     // Optional expected response length
+    data: [...], // Optional command data, up to 65535 bytes
+    le: 0x00,     // Optional expected response length, 0-65536
 });
 
 apdu.toString();    // Hex string
@@ -158,6 +158,10 @@ apdu.toBuffer();    // Node.js Buffer
 apdu.toByteArray(); // number[]
 apdu.setLe(0x10);   // Update expected length
 ```
+
+The command always includes Le. `le: 0`, the default, asks for the maximum: 256 bytes, or 65536 in the extended form. The command uses the short form when the data is at most 255 bytes and `le` is at most 256, and the ISO 7816-4 extended length form otherwise.
+
+A value that can't be encoded, such as a `p1` of 256 or a negative `le`, throws a `RangeError` instead of being silently truncated.
 
 ### `createResponseApdu(buffer)`
 
